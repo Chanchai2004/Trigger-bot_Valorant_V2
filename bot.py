@@ -1,81 +1,45 @@
-import cv2
-import numpy as np
-from pynput.mouse import Controller, Button, Listener
+import numpy as np  
 import keyboard
 import time
 import mss
 
-# Variable to keep track of whether the bot is enabled or not
-enabled = False
-frame1 = None  # Initialize frame1
 
-# Function to handle mouse events (toggle on right click)
-def on_click(x, y, button, pressed):
-    global enabled, frame1
-    if button == Button.right and pressed:
-        time.sleep(0.3)  # Wait for 0.3 seconds after right-click
-        enabled = not enabled  # Toggle the enabled state
-        if enabled:
-            print('Right-click detected, bot activated')
-            frame1 = None  # Reset frame1 when the bot is activated
-        else:
-            print('Right-click detected, bot deactivated')
+# ฟังก์ชันที่ปรับปรุงให้เช็คว่ามีพิกเซลในพื้นที่ที่ตรงกับเงื่อนไขหรือไม่
+def check_and_trigger_action(img):
+    # ตรวจสอบว่ามีพิกเซลที่ตรงเงื่อนไข: สีแดง (r > 180), สีเขียว (g < 80), สีฟ้า (b < 80)
+    if np.any((img[:, :, 2] > 180) & (img[:, :, 1] < 80) & (img[:, :, 0] < 80)):
+        # กดปุ่ม 'shift+x'
+        keyboard.press('shift+x')
+        time.sleep(0.1)  # เพิ่มดีเลย์เล็กน้อยเพื่อเลียนแบบการกดปุ่ม
+        keyboard.release('shift+x')  # ปล่อยปุ่ม 'shift+x'
+        
+        time.sleep(0.1)  # เวลาพักเพื่อปรับความเร็ว
+        print('Action triggered')  # แสดงข้อความว่ามีการกระทำเกิดขึ้น
+        return True  # คืนค่า True เพื่อระบุว่ามีการกระทำเกิดขึ้น
+    else:
+        return False  # คืนค่า False หากไม่มีการกระทำเกิดขึ้น
 
-# Start of the actual script
+# จุดเริ่มต้นของโปรแกรม
 if __name__ == '__main__':
-    print('Starting...')
+    print('Starting...')  # แสดงข้อความว่าโปรแกรมกำลังเริ่มทำงาน
 
-    # Setting up the mouse controller
-    mouse = Controller()
-    tm = int(round(time.time() * 1000))
-    fps = 1
-    fps1 = 0
+    # กำหนดพื้นที่หน้าจอสำหรับการจับภาพ (ขนาด 6x6 พิกเซล)
+    monitor = {"top": 476, "left": 636, "width": 8, "height": 6}
 
-    # Define the monitor region for screenshot (e.g., at position 955, 535 with 10x10 pixels)
-    monitor = {"top": 535, "left": 955, "width": 10, "height": 10}
-
-    # Create an instance of mss for fast screenshot capture
+    # สร้างอินสแตนซ์ mss เพื่อจับภาพหน้าจออย่างรวดเร็ว
     with mss.mss() as sct:
-        # Start a mouse listener in a separate thread
-        with Listener(on_click=on_click) as listener:
-            # Start a while loop to loop infinitely and as fast as possible
-            while True:
-                # Capture the screen in the defined region
-                img = np.array(sct.grab(monitor))
-                # Calculate the sum of all pixel values in the captured region
-                frame = img.sum()
+        while True:
+            # จับภาพหน้าจอในพื้นที่ที่กำหนดและแปลงเป็นอาร์เรย์ NumPy
+            img = np.array(sct.grab(monitor), dtype=np.uint8)  # ปรับปรุงการประมวลผลโดยใช้ dtype ที่เหมาะสม
 
-                # Checks if the bot is active (right-click toggles activation)
-                if enabled:
-                    # If frame1 is None, initialize it with the current frame value
-                    if frame1 is None:
-                        frame1 = frame
+            # แปลง BGRA (จาก mss) เป็น BGR (สำหรับใช้งานกับ NumPy)
+            img_bgr = img[:, :, :3]  # ลบช่อง alpha ออกเพื่อเพิ่มประสิทธิภาพ
+            
+            # ตรวจสอบและเรียกใช้งานคำสั่งตามค่าของพิกเซล
+            if check_and_trigger_action(img_bgr):
+                # ตัวเลือก: หยุดหรือกระทำเพิ่มเติมตามคำสั่ง
+                pass
 
-                    # If the picture value is different, the bot will shoot and deactivate itself
-                    if frame1 > (frame + 200) or frame1 < (frame - 200):  # Adjust threshold based on sensitivity
-                        keyboard.press('u')  # Press 'u' instead of clicking the mouse
-                        time.sleep(0.2)
-                        keyboard.release('u')  # Release 'u'
-                        enabled = False  # Deactivate the bot after shooting
-                        print('Shot')
-                        print('Click')  # Print "Click" when the bot triggers the action
-
-                    # If frame1 is not None and the picture value is not changing too much -> update it
-                    if frame1 is not None and (frame1 > (frame + 50) or frame1 < (frame - 50)):  # Update based on a smaller threshold
-                        frame1 = frame
-
-                # Calculate FPS
-                if int(round(time.time() * 1000)) - tm > 1000:
-                    fps1 = fps
-                    tm = int(round(time.time() * 1000))
-                    fps = 0
-                fps += 1
-
-                # Show FPS and color values for debugging
-                print(f'colorValue: {frame} FPS: {fps1}')
-
-                # Press 'i' to quit
-                if keyboard.is_pressed('i'):
-                    break
-
-            listener.join()  # Ensure the listener thread ends when the loop exits
+            # ตัวเลือก: หากต้องการหยุดลูป ให้กดปุ่ม 'i'
+            if keyboard.is_pressed('i'):
+                break
