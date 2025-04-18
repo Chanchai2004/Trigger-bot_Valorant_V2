@@ -5,28 +5,22 @@ import mss
 import os
 import sys
 
-# ฟังก์ชันที่ปรับปรุงให้เช็คว่ามีพิกเซลในพื้นที่ที่ตรงกับเงื่อนไขหรือไม่iiIiiIii
+# ฟังก์ชันที่ปรับปรุงให้เช็คว่ามีพิกเซลในพื้นที่ที่ตรงกับเงื่อนไขหรือไม่iiIi
 def check_and_trigger_action(img):
     # ตรวจสอบว่ามีพิกเซลที่ตรงเงื่อนไข: สีแดง (r > 180), สีเขียว (g < 80), สีฟ้า (b < 80)
     if np.any((img[:, :, 2] > 180) & (img[:, :, 1] < 80) & (img[:, :, 0] < 80)):
         # กดปุ่ม 'shift+x'
         keyboard.press_and_release('l')
-        time.sleep(0.05)  # เพิ่มดีเลย์ตามรอบioI
-        keyboard.press_and_release('l')
-        time.sleep(0.05)  # เพิ่มดีเลย์ตามรอบioI
-        keyboard.press_and_release('l')
-        time.sleep(0.05)  # เพิ่มดีเลย์ตามรอบioI
-
         os.execv(sys.executable, ['python'] + sys.argv)
         return True  # คืนค่า True เพื่อระบุว่ามีการกระทำเกิดขึ้น
     
 
-# จุดเริ่มต้นของโปรแกรม
+# จุดเริ่มต้นของโปรแกรมII
 if __name__ == '__main__':
     print('Starting...')  # แสดงข้อความว่าโปรแกรมกำลังเริ่มทำงาน
 
     # กำหนดพื้นที่หน้าจอสำหรับการจับภาพ (ขนาด 6x6 พิกเซล)
-    monitor = {"top": 462, "left": 638, "width": 4, "height": 20}
+    monitor = {"top": 565, "left": 1015, "width": 50, "height": 50}
 
     # สร้างอินสแตนซ์ mss เพื่อจับภาพหน้าจออย่างรวดเร็ว
     with mss.mss() as sct:
