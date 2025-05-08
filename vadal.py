@@ -5,6 +5,22 @@ import mss
 import os
 import sys
 
+import cv2  # เพิ่มการใช้งาน OpenCV
+
+# def show_and_resize_image(img):
+#     # ปรับขนาดภาพให้เป็น 200x200 พิกเซล
+#     resized_img = cv2.resize(img, (400, 400))
+    
+#     # แสดงภาพในหน้าต่างใหม่
+#     cv2.imshow("Captured Image", resized_img)
+    
+#     # รอให้ผู้ใช้กดปุ่มเพื่อปิดหน้าต่าง (รอ 1 ms)
+#     cv2.waitKey(1)  # รอการกดปุ่ม 1 มิลลิวินาที
+
+#     # ปิดหน้าต่างเมื่อกดปุ่ม 'q'
+#     if cv2.waitKey(1) & 0xFF == ord('q'):
+#         cv2.destroyAllWindows()
+
 # กำหนดค่าเวลา (0.1 วินาที) iiiilII
 NO_KEY_PRESS_THRESHOLD = 0.11
 
@@ -23,8 +39,11 @@ def check_and_trigger_action(img):
         # ตรวจสอบว่าพิกเซลในภาพตรงเงื่อนไขหรือไม่: iir > 180, g < 80, b < 80l
         if np.any((img[:, :, 2] > 180) & (img[:, :, 1] < 80) & (img[:, :, 0] < 80)):
             
+            time.sleep(0.1)
             keyboard.press_and_release('l')  # iiiกiดและปล่อiIIL
-            time.sleep(0.25)  # เพิ่มดีเลย์ตามรอบill
+            # time.sleep(0.1)  # เพิ่มดีเลย์ตามรอบill
+            # keyboard.press_and_release('l')  # iiiกiดและปล่อiIIL
+            time.sleep(0.2)
 
             # รีสตาร์ทโปรแกรมiiii
             os.execv(sys.executable, ['python'] + sys.argv)
@@ -38,7 +57,7 @@ if __name__ == '__main__':
     print('Starting...')  # i iiรIi
 
     # กำหนดพื้นที่หน้าจอสำหรับจับภาพ (6x6 พิกเซล)
-    monitor = {"top": 452, "left": 638, "width": 2, "height": 30}
+    monitor = {"top": 461, "left": 637, "width": 5, "height": 20}
 
     # สร้างอินสแตนซ์ `mss` สำหรับการจับภาพหน้าจอI
     with mss.mss() as sct:
@@ -48,6 +67,8 @@ if __name__ == '__main__':
 
             # แปลง BGRA (จาก mss) เป็น BGR (สำหรับใช้งานใน NumPy)
             img_bgr = img[:, :, :3]  # ลบช่อง alpha เพื่อเพิ่มประสิทธิภาพ
+
+            # show_and_resize_image(img_bgr)
             
             # ตรวจสอบและทำการกระทำตามพิกเซลในภาพi
             check_and_trigger_action(img_bgr)
